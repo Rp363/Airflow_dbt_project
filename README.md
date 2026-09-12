@@ -1,6 +1,6 @@
 # Walmart End-to-End Modern Data Engineering Pipeline
 
-An end-to-end modern data engineering project built using **Ghost DB (Identity Database), Databricks, dbt Core, Apache Airflow, Docker, and AWS S3**.
+An end-to-end modern data engineering project built using **Ghost DB (Agentic Database), Databricks, dbt Core, Apache Airflow, Docker, and AWS S3**.
 
 The project demonstrates a complete data pipeline starting from source data ingestion and CDC processing, followed by Bronze, Silver, and Gold transformations, incremental processing, SCD Type 2, dimensional modeling, and end-to-end workflow orchestration using Airflow.
 
@@ -10,9 +10,8 @@ The project demonstrates a complete data pipeline starting from source data inge
 
 ```text
                          ┌─────────────────────┐
-                         │   Ghost DB /        │
-                         │   Identity Database  │
-                         │    (PostgreSQL)      │
+                         │   Ghost DB          │
+                         │    (PostgreSQL)     │
                          └──────────┬──────────┘
                                     │
                               CDC / Upsert
@@ -44,14 +43,13 @@ The project demonstrates a complete data pipeline starting from source data inge
                                     ▼
                          ┌─────────────────────┐
                          │  Silver Business    │
-                         │      Models         │
+                         │      Models (OBT)   │
                          └──────────┬──────────┘
                                     │
                                     ▼
                          ┌─────────────────────┐
                          │    Gold Layer       │
-                         │                     │
-                         │  OBT + Dimensions   │
+                         │        Dimensions   │   
                          │      + Facts        │
                          └──────────┬──────────┘
                                     │
@@ -63,7 +61,7 @@ The project demonstrates a complete data pipeline starting from source data inge
              │          Apache Airflow             │
              │                                    │
              │  End-to-End Workflow Orchestration │
-             └────────────────────────────────────┘
+             └────────────────────────────────────┘  
 
 
                     AWS S3
@@ -83,8 +81,7 @@ The project demonstrates a complete data pipeline starting from source data inge
 
 | Technology | Purpose |
 |---|---|
-| Ghost DB / Identity DB | Source / operational database |
-| PostgreSQL | Source database technology |
+| Ghost DB / Agentic DB | Source / operational database |
 | Databricks | Data ingestion, processing and data platform |
 | dbt Core | Data transformation and modeling |
 | Databricks Adapter | Connects dbt Core with Databricks |
@@ -96,27 +93,9 @@ The project demonstrates a complete data pipeline starting from source data inge
 
 ---
 
-# Pipeline Overview
-
-The project is divided into multiple stages:
-
-1. Source data in Ghost DB / Identity DB
-2. CDC-based ingestion into Databricks
-3. Bronze staging layer
-4. dbt-based Silver transformations
-5. Business transformations
-6. Incremental processing
-7. SCD Type 2 implementation
-8. Dimensional modeling
-9. Gold layer / OBT
-10. Airflow orchestration
-11. S3-based streaming ingestion
-
----
-
 # 1. Source Database – Ghost DB
 
-The source data is maintained in the **Ghost DB / Identity Database**.
+The source data is maintained in the **Ghost DB**.
 
 The database acts as the source system for the pipeline.
 
@@ -130,7 +109,7 @@ Databricks is used to ingest data from the source database.
 
 The ingestion process captures source data and loads it into the Databricks Bronze layer.
 
-The ingestion process supports incremental data movement using CDC / upsert-based processing so that newly available or changed records can be processed without rebuilding the entire dataset.
+The ingestion process supports incremental data movement using CDC / upsert-based processing so that newly available or changed records can be processed without rebuilding the entire dataset and handling idempotency.
 
 The ingestion pipeline is configured with the required source database connection details and target Databricks objects.
 
@@ -165,7 +144,7 @@ The dbt project is configured to connect to Databricks using the **dbt Databrick
 The dbt project contains multiple transformation layers.
 
 ```text
-Bronze
+Bronze(source)
    │
    ▼
 Silver Technical
@@ -264,17 +243,6 @@ The snapshot configuration uses the required attributes such as:
 
 This allows historical changes to dimension records to be maintained rather than overwriting previous versions.
 
-Conceptually:
-
-```text
-Customer ID | Name       | Valid From | Valid To
----------------------------------------------------
-101         | Rohit      | 2025-01-01 | 2026-03-10
-101         | Rohit P.   | 2026-03-10 | NULL
-```
-
-This allows the historical state of a dimension to be preserved.
-
 ---
 
 # 10. Gold Layer
@@ -286,7 +254,6 @@ The Gold layer includes:
 - Dimensional models
 - Fact tables
 - Dimension tables
-- OBT / analytical tables
 
 The Gold layer provides a structured representation of the transformed data for downstream analytical use cases.
 
@@ -319,23 +286,12 @@ Ephemeral models are used for intermediate transformation logic that does not ne
 
 ---
 
-# 12. One Big Table (OBT)
-
-An **One Big Table (OBT)** is created for business-oriented analytical requirements.
-
-The OBT combines relevant business attributes and measures into a consolidated structure.
-
-This provides a convenient dataset for downstream analytical and reporting use cases.
-
-Metadata-driven processing is also incorporated into the OBT transformation logic.
 
 ---
 
-# 13. Apache Airflow Orchestration
+# 12. Apache Airflow Orchestration
 
 Apache Airflow is used to orchestrate the end-to-end pipeline.
-
-Airflow is deployed using **Docker**.
 
 The Airflow DAG contains Python-based tasks that define the execution sequence and dependencies between different stages of the pipeline.
 
@@ -369,7 +325,7 @@ Final Analytical Layer
 
 # 14. Airflow and Databricks Integration
 
-Airflow is integrated with Databricks to trigger Databricks jobs programmatically.
+Airflow is integrated with Databricks(for source) to trigger Databricks jobs programmatically.
 
 The Databricks Workspace Client is used to:
 
@@ -415,7 +371,7 @@ This allows the pipeline to execute automatically according to the defined sched
 
 # 16. AWS S3 Streaming Ingestion
 
-A separate ingestion pattern is implemented for file-based data arriving in **AWS S3**.
+A separate ingestion pattern is implemented for file-based data arriving in **AWS S3** may not be running daily but weekly so separated from airflow.
 
 For example, customer review data can arrive as new files in an S3 bucket.
 
@@ -444,7 +400,6 @@ The complete project can be summarized as:
 
 ```text
                     Ghost DB
-                  Identity DB
                        │
                        │ CDC / Upsert
                        ▼
@@ -496,34 +451,6 @@ The complete project can be summarized as:
                     ▼
               Streaming Table
 ```
-
----
-
-# Key Data Engineering Concepts Demonstrated
-
-- CDC-based data ingestion
-- Upsert processing
-- Bronze / Silver / Gold architecture
-- Databricks data ingestion
-- dbt Core
-- dbt Databricks adapter
-- Incremental materialization
-- dbt snapshots
-- Slowly Changing Dimension Type 2
-- Dimensional modeling
-- Fact and dimension tables
-- Ephemeral dbt models
-- One Big Table (OBT)
-- Metadata-driven transformation
-- Data quality testing
-- Apache Airflow DAGs
-- Airflow task dependencies
-- Airflow and Databricks integration
-- Databricks job monitoring
-- AWS S3 ingestion
-- Streaming tables
-- Dockerized Airflow
-- Git and GitHub
 
 # Key Takeaways
 
