@@ -84,8 +84,7 @@ The project demonstrates a complete data pipeline starting from source data inge
 | Ghost DB / Agentic DB | Source / operational database |
 | Databricks | Data ingestion, processing and data platform |
 | dbt Core | Data transformation and modeling |
-| Databricks Adapter | Connects dbt Core with Databricks |
-| PySpark | Data processing and transformation |
+| JINJA SQL | Data processing and transformation |
 | Apache Airflow | Workflow orchestration |
 | Docker | Containerized Airflow environment |
 | AWS S3 | File-based data ingestion |
@@ -140,6 +139,14 @@ No major business transformations are applied at this stage.
 After the Bronze layer is created, **dbt Core** is used for the transformation and modeling layer.
 
 The dbt project is configured to connect to Databricks using the **dbt Databricks adapter**.
+
+### Jinja Templating
+
+Jinja templating is used within dbt SQL models to make the transformation logic dynamic and reusable.
+
+Jinja allows SQL statements to be generated dynamically using variables, conditional logic, loops, and dbt macros. This helps reduce repetitive SQL and makes the transformation logic more maintainable.
+
+The dbt models use Jinja along with dbt functionality such as `ref()` and `source()` to create dependencies between models and source datasets.
 
 The dbt project contains multiple transformation layers.
 
